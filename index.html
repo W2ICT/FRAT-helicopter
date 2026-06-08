@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FRAT — Flight Risk Assessment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { font-family:'Sarabun',sans-serif; box-sizing:border-box; }
+body { background:#f5f5f4; color:#1c1917; }
+
+/* tabs */
+.tab-btn { padding:10px 22px; font-size:14px; font-weight:500; border-bottom:2px solid transparent; color:#78716c; background:transparent; cursor:pointer; transition:.15s; }
+.tab-btn.active { color:#1c1917; border-bottom-color:#1c1917; font-weight:600; }
+.tab-panel { display:none; } .tab-panel.active { display:block; }
+
+/* card */
+.card { background:#fff; border-radius:10px; border:1px solid #e7e5e4; }
+
+/* inputs */
+.inp { border:1.5px solid #e7e5e4; border-radius:7px; padding:7px 10px; font-size:13px; width:100%; background:#fafaf9; transition:border .15s; }
+.inp:focus { outline:none; border-color:#a8a29e; background:#fff; }
+
+/* role buttons */
+.role-btn {
+  padding:16px 20px; border-radius:10px; border:2px solid #e7e5e4;
+  background:#fff; cursor:pointer; transition:.15s; text-align:left; width:100%;
+}
+.role-btn:hover { border-color:#a8a29e; }
+.role-btn.active { border-color:#1c1917; background:#fafaf9; }
+.role-btn .role-title { font-size:15px; font-weight:600; color:#1c1917; }
+.role-btn .role-sub   { font-size:12px; color:#78716c; margin-top:3px; }
+
+/* options */
+.opt {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:10px 12px; border-radius:7px; border:1.5px solid #e7e5e4;
+  cursor:pointer; transition:.12s; margin-bottom:5px; background:#fff;
+}
+.opt:hover { border-color:#a8a29e; background:#fafaf9; }
+.opt-radio { width:16px; height:16px; border-radius:50%; border:1.5px solid #d6d3d1; background:#fff; flex-shrink:0; margin-top:3px; transition:.12s; }
+.opt.sel-0 { border-color:#86efac; background:#f0fdf4; }
+.opt.sel-1 { border-color:#fcd34d; background:#fffbeb; }
+.opt.sel-2 { border-color:#fca5a5; background:#fff1f2; }
+.opt.sel-0 .opt-radio { border-color:#16a34a; background:#16a34a; box-shadow:inset 0 0 0 3px #fff; }
+.opt.sel-1 .opt-radio { border-color:#d97706; background:#d97706; box-shadow:inset 0 0 0 3px #fff; }
+.opt.sel-2 .opt-radio { border-color:#dc2626; background:#dc2626; box-shadow:inset 0 0 0 3px #fff; }
+.opt.sel-0 .opt-text { color:#166534; }
+.opt.sel-1 .opt-text { color:#92400e; }
+.opt.sel-2 .opt-text { color:#9f1239; }
+.opt-text { font-size:13.5px; line-height:1.45; color:#44403c; flex:1; }
+
+/* mitigation */
+.mit { display:none; margin-top:6px; font-size:12.5px; padding:6px 10px; border-radius:5px; }
+.mit.amb { background:#fffbeb; border-left:3px solid #f59e0b; color:#92400e; }
+.mit.stp { background:#fff1f2; border-left:3px solid #f43f5e; color:#9f1239; font-weight:600; }
+.mit.show { display:block; }
+
+/* risk badges */
+.risk-badge { display:inline-flex; align-items:center; gap:6px; padding:5px 16px; border-radius:999px; font-size:13px; font-weight:600; }
+.rl-low  { background:#dcfce7; color:#15803d; }
+.rl-mid  { background:#fef9c3; color:#a16207; }
+.rl-high { background:#ffe4e6; color:#be123c; }
+
+/* top bar */
+.top-bar { position:sticky; top:0; z-index:50; background:rgba(255,255,255,.95); backdrop-filter:blur(6px); border-bottom:1px solid #e7e5e4; padding:8px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+
+/* progress */
+.prog-bg { height:5px; background:#e7e5e4; border-radius:999px; }
+.prog-fill { height:5px; border-radius:999px; transition:width .3s,background .3s; background:#86efac; }
+
+/* section header */
+.sec-hdr { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; user-select:none; border-bottom:1px solid #e7e5e4; }
+.chevron { font-size:10px; color:#a8a29e; transition:transform .2s; }
+.collapsed .chevron { transform:rotate(-90deg); }
+.col-body { overflow:hidden; transition:max-height .22s ease; }
+.col-body.shut { max-height:0 !important; }
+
+/* factor */
+.factor-wrap { padding:14px 16px; border-bottom:1px solid #f5f5f4; }
+.factor-wrap:last-child { border-bottom:none; }
+
+/* section score bar */
+.sec-bar-bg { height:6px; border-radius:999px; background:#f5f5f4; }
+.sec-bar-fill { height:6px; border-radius:999px; transition:width .4s,background .4s; }
+
+/* buttons */
+.btn-primary { padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; background:#1c1917; color:#fff; cursor:pointer; border:none; transition:.15s; }
+.btn-primary:hover { background:#292524; }
+.btn-primary:disabled { background:#d6d3d1; color:#a8a29e; cursor:not-allowed; }
+.btn-ghost { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:500; border:1.5px solid #e7e5e4; background:#fff; color:#44403c; cursor:pointer; transition:.15s; }
+.btn-ghost:hover { border-color:#a8a29e; background:#fafaf9; }
+.btn-danger { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:500; border:1.5px solid #fca5a5; background:#fff1f2; color:#b91c1c; cursor:pointer; transition:.15s; }
+
+/* high risk item */
+.risk-item { border-left:3px solid #fca5a5; background:#fff1f2; padding:8px 12px; border-radius:0 6px 6px 0; font-size:13px; }
+
+/* ── print helpers ── */
+.no-screen { display:none !important; }
+
+/* print-a4 stays off-screen (not display:none) so canvas gets layout for Chart.js */
+#print-a4 {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 794px; /* ~A4 at 96dpi */
+  visibility: hidden;
+  pointer-events: none;
+}
+
+@media print {
+  .no-print  { display:none !important; }
+  body { background:#fff; margin:0; padding:0; }
+  @page { size: A4 portrait; margin: 10mm 12mm 12mm 12mm; }
+  #s1,#s2,#s3 { display:none !important; }
+  #print-a4 {
+    position: static !important;
+    left: auto !important;
+    width: auto !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    display: block !important;
+  }
+}
+
+/* ══ A4 PRINT LAYOUT ══ */
+#print-a4 {
+  font-family:'Sarabun',sans-serif;
+  font-size:9pt;
+  color:#0f172a;
+  line-height:1.45;
+  width:100%;
+}
+
+/* header band */
+.pa-header {
+  background:#1a3a5c;
+  color:#fff;
+  display:grid;
+  grid-template-columns:48pt 1fr auto;
+  align-items:center;
+  gap:10pt;
+  padding:8pt 12pt;
+  border-radius:4pt 4pt 0 0;
+  margin-bottom:0;
+  print-color-adjust:exact;
+  -webkit-print-color-adjust:exact;
+}
+.pa-emblem {
+  font-size:28pt;
+  text-align:center;
+  line-height:1;
+  opacity:.9;
+}
+.pa-title-main {
+  font-size:13pt;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.pa-title-sub  { font-size:9pt;  opacity:.85; margin-top:1pt; }
+.pa-title-form { font-size:8pt; opacity:.7; margin-top:2pt; letter-spacing:.06em; }
+.pa-meta { text-align:right; font-size:7.5pt; opacity:.8; line-height:1.8; }
+
+/* info table */
+.pa-info {
+  width:100%;
+  border-collapse:collapse;
+  border:1pt solid #334155;
+  margin-bottom:5pt;
+}
+.pa-info td {
+  padding:4pt 7pt;
+  border:1pt solid #cbd5e1;
+  font-size:8.5pt;
+  vertical-align:middle;
+}
+.pa-info .lbl {
+  font-size:7pt;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:#64748b;
+  background:#f8fafc;
+  width:24%;
+}
+.pa-info .val { font-weight:600; color:#0f172a; }
+
+/* two-col row */
+.pa-row {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5pt;
+  margin-bottom:5pt;
+}
+
+/* generic box */
+.pa-box {
+  border:1pt solid #334155;
+  border-radius:3pt;
+  overflow:hidden;
+}
+.pa-box-hdr {
+  background:#1e3a5f;
+  color:#fff;
+  font-size:7.5pt;
+  font-weight:700;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  padding:4pt 8pt;
+  print-color-adjust:exact;
+  -webkit-print-color-adjust:exact;
+}
+.pa-box-body { padding:7pt 8pt; }
+
+/* risk level display */
+.pa-badge-wrap { text-align:center; margin:4pt 0 5pt; }
+.pa-badge-print {
+  display:block;
+  font-size:16pt;
+  font-weight:700;
+  letter-spacing:.08em;
+  padding:4pt 6pt;
+  border-radius:4pt;
+  border:2pt solid;
+  text-align:center;
+  print-color-adjust:exact;
+  -webkit-print-color-adjust:exact;
+}
+.pa-badge-go   { color:#15803d; border-color:#16a34a; background:#f0fdf4; }
+.pa-badge-cau  { color:#a16207; border-color:#d97706; background:#fefce8; }
+.pa-badge-nogo { color:#be123c; border-color:#dc2626; background:#fff1f2; }
+.pa-score-line { text-align:center; font-size:9.5pt; font-weight:600; margin-bottom:2pt; }
+.pa-score-sub  { text-align:center; font-size:7.5pt; color:#64748b; margin-bottom:4pt; }
+.pa-prog-bg { height:7pt; background:#e2e8f0; border-radius:999pt; overflow:hidden; margin:0 4pt; }
+.pa-prog-fill { height:7pt; border-radius:999pt; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+
+/* section bars in print */
+.pa-sec-row { display:grid; grid-template-columns:58pt 1fr 20pt; align-items:center; gap:3pt; margin-bottom:3pt; }
+.pa-sec-label { font-size:7.5pt; font-weight:600; color:#334155; }
+.pa-sec-bar-bg { height:7pt; background:#e2e8f0; border-radius:999pt; overflow:hidden; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+.pa-sec-bar-fill { height:7pt; border-radius:999pt; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+.pa-sec-pct { font-size:7pt; font-weight:700; text-align:right; }
+
+/* radar */
+.pa-radar-center { display:flex; align-items:center; justify-content:center; padding:4pt; }
+.pa-radar-center img { max-width:200pt; max-height:195pt; }
+
+/* high risk list */
+.pa-hi-item {
+  border-left:3pt solid #dc2626;
+  padding:3pt 6pt;
+  margin-bottom:4pt;
+  font-size:8pt;
+  background:#fff1f2;
+  print-color-adjust:exact;
+  -webkit-print-color-adjust:exact;
+}
+.pa-hi-sec { font-size:7pt; color:#94a3b8; display:block; margin-bottom:1pt; }
+.pa-none { font-size:8pt; color:#16a34a; font-weight:600; text-align:center; padding:12pt; }
+
+/* legend */
+.pa-legend {
+  border:1pt solid #cbd5e1;
+  border-radius:3pt;
+  padding:4pt 8pt;
+  display:flex;
+  align-items:center;
+  gap:12pt;
+  margin-bottom:5pt;
+  font-size:7.5pt;
+  background:#f8fafc;
+  print-color-adjust:exact;
+  -webkit-print-color-adjust:exact;
+}
+.pa-leg-go   { color:#15803d; font-weight:600; }
+.pa-leg-cau  { color:#a16207; font-weight:600; }
+.pa-leg-nogo { color:#be123c; font-weight:600; }
+.pa-leg-note { margin-left:auto; color:#94a3b8; }
+
+/* signature block */
+.pa-sig {
+  border:1pt solid #334155;
+  border-radius:3pt;
+  padding:7pt 10pt 8pt;
+  margin-bottom:5pt;
+}
+.pa-sig-hdr { font-size:7.5pt; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#334155; margin-bottom:7pt; }
+.pa-sig-grid { display:grid; grid-template-columns:1fr 80pt 1fr 80pt; gap:6pt 10pt; }
+.pa-sig-item { }
+.pa-sig-line { border-bottom:1pt solid #334155; height:18pt; }
+.pa-sig-lbl { font-size:7pt; color:#64748b; margin-top:2pt; }
+.pa-sig-name { font-size:8pt; font-weight:600; color:#0f172a; }
+
+/* footer */
+.pa-footer {
+  border-top:1.5pt solid #1a3a5c;
+  padding:3pt 0 0;
+  display:flex;
+  justify-content:space-between;
+  font-size:7pt;
+  color:#64748b;
+  print-color-adjust:exact;
+  -webkit-print-color-adjust:exact;
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ STEP 1: SETUP ══════════════════ -->
+<div id="s1">
+  <header class="bg-white border-b border-stone-200">
+    <div class="max-w-lg mx-auto px-5 py-5">
+      <p class="text-xs text-stone-400 uppercase tracking-widest font-semibold">Pre-Flight</p>
+      <h1 class="text-xl font-bold text-stone-800">Flight Risk Assessment</h1>
+      <p class="text-xs text-stone-400 mt-0.5">แบบประเมินความเสี่ยงก่อนทำการบิน</p>
+    </div>
+    <div class="max-w-lg mx-auto px-5 flex gap-0 border-t border-stone-100">
+      <button id="tab-TN-btn" class="tab-btn active" onclick="setType('TN')">การฝึกบิน (TN)</button>
+      <button id="tab-MS-btn" class="tab-btn" onclick="setType('MS')">ปฏิบัติภารกิจ (MS)</button>
+    </div>
+  </header>
+
+  <div class="max-w-lg mx-auto px-4 py-6 space-y-4">
+
+    <!-- Flight info -->
+    <div class="card p-4">
+      <p class="text-xs font-semibold uppercase tracking-widest text-stone-400 mb-3">ข้อมูลเที่ยวบิน</p>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-xs text-stone-400 block mb-1">วันที่</label><input type="date" id="setup-date" class="inp"></div>
+        <div><label class="text-xs text-stone-400 block mb-1" id="setup-no-lbl">Flight No.</label><input type="text" id="setup-no" placeholder="TH-001" class="inp"></div>
+        <div><label class="text-xs text-stone-400 block mb-1">Aircraft Type</label><input type="text" id="setup-ac" placeholder="UH-60" class="inp"></div>
+        <div><label class="text-xs text-stone-400 block mb-1">Route</label><input type="text" id="setup-route" placeholder="VTUU→VTBD" class="inp"></div>
+      </div>
+    </div>
+
+    <!-- Assessor name -->
+    <div class="card p-4">
+      <p class="text-xs font-semibold uppercase tracking-widest text-stone-400 mb-3">ผู้ประเมิน</p>
+      <div><label class="text-xs text-stone-400 block mb-1">ชื่อผู้ประเมินความเสี่ยง</label>
+        <input type="text" id="setup-name" placeholder="ยศ ชื่อ สกุล" class="inp"></div>
+    </div>
+
+    <!-- Role -->
+    <div class="card p-4">
+      <p class="text-xs font-semibold uppercase tracking-widest text-stone-400 mb-3">หน้าที่ในเที่ยวบินนี้</p>
+      <div class="space-y-2">
+        <button class="role-btn" id="role-c1" onclick="setRole('c1')">
+          <div class="role-title" id="role-c1-title">PIC / IP / PILOT</div>
+          <div class="role-sub">นักบินที่หนึ่ง / ครูการบิน</div>
+        </button>
+        <button class="role-btn" id="role-c2" onclick="setRole('c2')">
+          <div class="role-title" id="role-c2-title">CO-PILOT</div>
+          <div class="role-sub">นักบินที่สอง</div>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-primary w-full py-3" id="start-btn" onclick="startAssessment()">
+      เริ่มประเมิน →
+    </button>
+    <p id="start-err" class="text-xs text-red-500 text-center hidden">กรุณากรอกชื่อและเลือกหน้าที่ก่อน</p>
+
+    <!-- Google Sheet settings (collapsible) -->
+    <div class="card overflow-hidden">
+      <button onclick="toggleGasSettings()" class="w-full flex items-center justify-between px-4 py-3 text-left">
+        <span class="text-xs font-semibold text-stone-400 uppercase tracking-widest">⚙ Google Sheet Integration</span>
+        <span id="gas-chevron" class="text-xs text-stone-300">▼</span>
+      </button>
+      <div id="gas-settings-body" style="display:none" class="px-4 pb-4 border-t border-stone-100 pt-3">
+        <label class="text-xs text-stone-400 block mb-1">Apps Script Web App URL</label>
+        <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/…/exec" class="inp text-xs mb-2">
+        <div class="flex gap-2 items-center">
+          <button onclick="saveGasUrl()" class="btn-primary text-xs px-4 py-2">บันทึก URL</button>
+          <span id="gas-save-msg" class="text-xs text-green-600 hidden">✓ บันทึกแล้ว</span>
+        </div>
+        <p class="text-xs text-stone-300 mt-2">วาง URL จาก Apps Script → Deploy → Web App เพื่อบันทึก log อัตโนมัติ</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ STEP 2: ASSESSMENT ══════════════════ -->
+<div id="s2" hidden>
+
+  <div class="top-bar no-print">
+    <div class="flex items-center gap-3">
+      <button class="btn-ghost text-xs" onclick="goSetup()">← กลับ</button>
+      <span id="a2-label" class="text-xs font-semibold text-stone-500 uppercase tracking-wide"></span>
+      <span id="a2-risk" class="risk-badge rl-low">GO</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="text-xs text-stone-400"><span id="a2-answered">0</span>/<span id="a2-total">0</span></span>
+      <div style="width:120px"><div class="prog-bg"><div id="a2-prog" class="prog-fill" style="width:0%"></div></div></div>
+    </div>
+  </div>
+
+  <div class="max-w-3xl mx-auto px-4 py-5 space-y-4">
+    <div id="a2-sections"></div>
+
+    <div class="card p-5 no-print">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div class="text-sm text-stone-500">ตรวจสอบคำตอบให้ครบก่อนยืนยัน</div>
+        <button class="btn-primary px-8" onclick="confirmAssessment()">ยืนยันการประเมิน ✓</button>
+      </div>
+      <p id="a2-warn" class="text-xs text-amber-600 mt-2 hidden">⚠️ ยังมีคำถามที่ยังไม่ตอบ — กด ยืนยัน อีกครั้งเพื่อดำเนินต่อ</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ STEP 3: REPORT ══════════════════ -->
+<div id="s3" hidden>
+
+  <header class="bg-white border-b border-stone-200 no-print">
+    <div class="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between">
+      <div class="text-sm font-semibold text-stone-600">ผลการประเมินความเสี่ยง</div>
+      <div class="flex gap-2">
+        <span id="r-sync-status" class="text-xs"></span>
+        <button class="btn-ghost" onclick="preparePrint()">⬇ Export PDF</button>
+        <button class="btn-ghost" onclick="goSetup()">ประเมินใหม่</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-3xl mx-auto px-4 py-6 space-y-4">
+
+    <!-- Report header -->
+    <div class="card p-5">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div><span class="text-xs text-stone-400 block">ผู้ประเมิน</span><span id="r-name" class="font-semibold"></span></div>
+        <div><span class="text-xs text-stone-400 block">หน้าที่</span><span id="r-role" class="font-semibold"></span></div>
+        <div><span class="text-xs text-stone-400 block">ประเภทแบบฟอร์ม</span><span id="r-type" class="font-semibold"></span></div>
+        <div><span class="text-xs text-stone-400 block">วันที่</span><span id="r-date" class="font-semibold"></span></div>
+        <div><span class="text-xs text-stone-400 block">Flight No.</span><span id="r-no" class="font-semibold"></span></div>
+        <div><span class="text-xs text-stone-400 block">Aircraft</span><span id="r-ac" class="font-semibold"></span></div>
+        <div><span class="text-xs text-stone-400 block">Route</span><span id="r-route" class="font-semibold"></span></div>
+        <div><span class="text-xs text-stone-400 block">เวลา</span><span id="r-time" class="font-semibold"></span></div>
+      </div>
+    </div>
+
+    <!-- Risk level -->
+    <div class="card p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div>
+        <p class="text-xs text-stone-400 mb-1">ผลการประเมินโดยรวม</p>
+        <div id="r-risk-badge" class="risk-badge rl-low" style="font-size:20px;padding:8px 24px;">GO</div>
+      </div>
+      <div class="flex-1 w-full">
+        <div class="flex justify-between text-xs text-stone-400 mb-1">
+          <span>คะแนนรวม</span>
+          <span><span id="r-score">0</span> / <span id="r-max">0</span></span>
+        </div>
+        <div class="w-full bg-stone-100 rounded-full h-3">
+          <div id="r-prog" class="h-3 rounded-full transition-all" style="width:0%;background:#34d399"></div>
+        </div>
+        <div class="text-xs text-stone-300 mt-1">🟢 GO (0–25%) · 🟡 CAUTION (26–50%) · 🔴 NO-GO (51%+)</div>
+      </div>
+    </div>
+
+    <!-- Section scores + Radar chart side by side -->
+    <div class="grid md:grid-cols-2 gap-4">
+
+      <!-- Section breakdown -->
+      <div class="card p-4">
+        <p class="text-xs font-semibold uppercase tracking-widest text-stone-400 mb-3">คะแนนแต่ละหมวด</p>
+        <div id="r-sections" class="space-y-3"></div>
+      </div>
+
+      <!-- Radar chart -->
+      <div class="card p-4 flex flex-col">
+        <p class="text-xs font-semibold uppercase tracking-widest text-stone-400 mb-3">Radar Chart</p>
+        <div class="flex-1 flex items-center justify-center" style="min-height:260px">
+          <canvas id="radar-chart"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- High risk items -->
+    <div class="card p-4" id="r-high-wrap">
+      <p class="text-xs font-semibold uppercase tracking-widest text-stone-400 mb-3">รายการความเสี่ยงสูง</p>
+      <div id="r-high-items" class="space-y-2"></div>
+    </div>
+
+    <!-- Mitigation notices grouped by section -->
+    <div class="card p-4" id="r-mit-wrap">
+      <p class="text-xs font-semibold uppercase tracking-widest text-stone-400 mb-3">คำแนะนำเพิ่มเติม · Mitigation Notices</p>
+      <div id="r-mit-items"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────
+// FORM DATA
+// ─────────────────────────────────────────────────
+const FORMS = {
+  TN: {
+    typeName: 'การฝึกบิน (TRAINING)',
+    crew1Title: 'TRAINER / IP / PILOT',
+    crew2Title: 'TRAINEE / CO-PILOT',
+    thLow: .25, thMid: .50,
+    crew1Sections: [
+      { id:'tn_c1_pers', title:'Personal Conditions', th:'สภาพร่างกาย / จิตใจ', group:'personal', factors:[
+        {id:'tn_c1_ph', label:'Physical', th:'ร่างกาย', opts:[{t:'No problems. Physically in shape.'},{t:'Nuisance, not completely in shape.'},{t:'Headache, cold, fever, toothache.',mit:'STOP!! Get released from duty / นบ.สำรอง',stop:true}]},
+        {id:'tn_c1_med',label:'Medication',th:'ยา',opts:[{t:'No medications in the last 24 hours.'},{t:'Over the counter medication.'},{t:'Prescription medication. Attention and driving impairing medication.',mit:'STOP!! Get released from duty',stop:true}]},
+        {id:'tn_c1_slp',label:'Sleep',th:'การนอนหลับ',opts:[{t:'Well slept.'},{t:'Moderate sleep or no sleep in the last 13 hours.',mit:'Take a break — Get some rest before next flight'},{t:'Poor sleep. (ใช้เวลาเกิน 30 นาที, ตื่นกลางดึก>1/คืน, ตื่นกลางดึกนานกว่า 20 นาที/คืน)'}]},
+        {id:'tn_c1_fat',label:'Fatigue',th:'ความเหนื่อยล้า',opts:[{t:'No fatigue.'},{t:'Moderate fatigue.'},{t:'Mentally or physically fatigued.'}]},
+        {id:'tn_c1_fod',label:'Food & Drink',th:'อาหาร/น้ำ',opts:[{t:'Adequately nourished and hydrated.'},{t:'4–6 hrs without eating / 2–4 hrs without drinking.',mit:'Take a break — Get something to eat/drink before next flight'},{t:'> 6 hrs from last meal. Hot weather, no water on board.'}]},
+        {id:'tn_c1_phy',label:'Physiologic',th:'สรีรวิทยา',opts:[{t:'Physiologically relieved.'},{t:'Medium mission duration with no rest facilities.'},{t:'Long mission duration with no rest facilities.',mit:'STOP!! Report the flight',stop:true}]},
+        {id:'tn_c1_emo',label:'Emotion',th:'อารมณ์',opts:[{t:'Not emotionally involved.'},{t:'Emotionally involved. Little private problems.'},{t:'Emotionally stressed. Legal, financial or family problems.'}]}
+      ]},
+      { id:'tn_c1_rec', title:'Recency', th:'ความสมบูรณ์ทางการบิน', group:'recency', factors:[
+        {id:'tn_c1_sim',label:'Flight Simulator',th:'เครื่องจำลอง',opts:[{t:'2 times/year or 1 time in 6 months'},{t:'1 time/year'},{t:'Never. No course taken yet.',mit:'STOP!! Report the flight',stop:true}]},
+        {id:'tn_c1_tot',label:'Total Flight Time',th:'ชั่วโมงบินรวม',opts:[{t:'Over 1,000 hrs total.'},{t:'300–1,000 hrs total.',mit:'Particular strong briefing before the flight'},{t:'Below 300 hrs total.'}]},
+        {id:'tn_c1_typ',label:'Flight Time on Type',th:'ชั่วโมงบนแบบ',opts:[{t:'Over 300 hrs on type.'},{t:'100–300 hrs on type.',mit:'Take your time to prepare. Study route, destination and weather'},{t:'Below 100 hrs on type.'}]},
+        {id:'tn_c1_lst',label:'Last Flight on Type',th:'บินครั้งล่าสุด',opts:[{t:'> 15 hrs within last 90 days'},{t:'< 15 hrs within last 90 days',mit:'No emergency procedure training on 1st flight'},{t:'Minimum training within last 90 days'}]}
+      ]},
+      { id:'tn_c1_base', title:'Operating Base', th:'ฐานปฏิบัติการ', group:'base', factors:[
+        {id:'tn_c1_opb',label:'Operating Base',th:'ฐานบิน',opts:[{t:'Training area recognised within last 6 months'},{t:'Training area recognised after last 6 months',mit:'Take your time to prepare the flight'},{t:'New base or first four shifts on that base.'}]}
+      ]}
+    ],
+    crew2Sections: [
+      { id:'tn_c2_pers', title:'Personal Conditions', th:'สภาพร่างกาย / จิตใจ', group:'personal', factors:[
+        {id:'tn_c2_ph', label:'Physical', th:'ร่างกาย',opts:[{t:'No problems. Physically in shape.'},{t:'Nuisance, not completely in shape.'},{t:'Headache, cold, fever, toothache.'}]},
+        {id:'tn_c2_med',label:'Medication',th:'ยา',opts:[{t:'No medications in the last 24 hours.'},{t:'Over the counter medication.'},{t:'Prescription medication. Attention and driving impairing medication.'}]},
+        {id:'tn_c2_slp',label:'Sleep',th:'การนอนหลับ',opts:[{t:'Well slept.'},{t:'Moderate sleep or no sleep in the last 13 hours.'},{t:'Poor sleep. (ใช้เวลาเกิน 30 นาที, ตื่นกลางดึก>1/คืน, ตื่นกลางดึกนานกว่า 20 นาที/คืน)'}]},
+        {id:'tn_c2_fat',label:'Fatigue',th:'ความเหนื่อยล้า',opts:[{t:'No fatigue. First flight of the day.'},{t:'Duty day: < 10 hrs, second flight of the day.'},{t:'Duty day: > 10 hrs, more than 2 flights.'}]},
+        {id:'tn_c2_fod',label:'Food & Drink',th:'อาหาร/น้ำ',opts:[{t:'Adequately nourished and hydrated.'},{t:'4–6 hrs without eating / 2–4 hrs without drinking.'},{t:'> 6 hrs from last meal. Hot weather, no water on board.'}]},
+        {id:'tn_c2_phy',label:'Physiologic',th:'สรีรวิทยา',opts:[{t:'Physiologically relieved.'},{t:'Medium mission duration with no rest facilities.'},{t:'Long mission duration with no rest facilities.'}]},
+        {id:'tn_c2_emo',label:'Emotion',th:'อารมณ์',opts:[{t:'Not emotionally involved.'},{t:'Emotionally involved. Little private problems.'},{t:'Emotionally stressed. Legal, financial or family problems.'}]}
+      ]},
+      { id:'tn_c2_rec', title:'Recency', th:'ความสมบูรณ์ทางการบิน', group:'recency', factors:[
+        {id:'tn_c2_sim',label:'Flight Simulator',th:'เครื่องจำลอง',opts:[{t:'2 times/year or 1 time in 6 months'},{t:'1 time/year'},{t:'Never. No course taken yet.'}]},
+        {id:'tn_c2_tot',label:'Total Flight Time',th:'ชั่วโมงบินรวม',opts:[{t:'Over 500 hrs total.'},{t:'150–500 hrs total.',mit:'Particular strong briefing before the flight'},{t:'Below 150 hrs total.'}]},
+        {id:'tn_c2_typ',label:'Flight Time on Type',th:'ชั่วโมงบนแบบ',opts:[{t:'Over 100 hrs on type.'},{t:'50–100 hrs on type.',mit:'Particular strong briefing before the flight'},{t:'Below 50 hrs on type.'}]},
+        {id:'tn_c2_lst',label:'Last Flight on Type',th:'บินครั้งล่าสุด',opts:[{t:'Within 1 month.'},{t:'Between 1–3 months.'},{t:'Over 3 months.'}]}
+      ]},
+      { id:'tn_c2_base', title:'Operating Base', th:'ฐานปฏิบัติการ', group:'base', factors:[
+        {id:'tn_c2_opb',label:'Operating Base',th:'ฐานบิน',opts:[{t:'Training area recognised within last 6 months'},{t:'Training area recognised after last 6 months'},{t:'New base or first four shifts on that base.'}]}
+      ]}
+    ],
+    sharedSections: [
+      { id:'tn_mis', title:'Mission', th:'ภารกิจ', group:'mission', factors:[
+        {id:'tn_m_cmp',label:'Mission Complexity',th:'ความซับซ้อน',opts:[{t:'Navigation (VFR/IFR) — Line Check'},{t:'Various landing (without emergency exercise)',mit:'Particular study of flight profile'},{t:'Emergency procedure training — Type Rating'}]},
+        {id:'tn_m_spc',label:'Specific Missions (SAR, NVG…)',th:'ภารกิจพิเศษ',opts:[{t:'One specific mission training/check profile'},{t:'Two specific mission profiles'},{t:'More than two specific profiles'}]},
+        {id:'tn_m_rul',label:'Flight Rules',th:'กฎการบิน',opts:[{t:'VFR.'},{t:'VMC IFR or night flight.',mit:'Strong weather forecast studies mandatory. Check IFR minimum requirements'},{t:'IMC IFR.'}]}
+      ]},
+      { id:'tn_acf', title:'Aircraft', th:'อากาศยาน', group:'aircraft', factors:[
+        {id:'tn_a_fit',label:'Helicopter Fitted for Mission',th:'พร้อมภารกิจ',opts:[{t:'Yes.'},{t:'Partially.'},{t:'Not.'}]},
+        {id:'tn_a_ano',label:'Known Anomalies',th:'ความผิดปกติ',opts:[{t:'None.'},{t:'Less than 2.',mit:'Discuss countermeasures to compensate for equipment loss/degradation'},{t:'More than 2.'}]},
+        {id:'tn_a_lod',label:'Loadsheet',th:'แผ่นน้ำหนัก',opts:[{t:'Done.'},{t:'Not done, but within limits by experience.',mit:'Calculate load sheet. Verify performance compliance with flight profile'},{t:'Not done and near aircraft limitation.'}]},
+        {id:'tn_a_prf',label:'Performance (Weight & Density Alt.)',th:'สมรรถนะ',opts:[{t:'Well under limits.'},{t:'Within emergency limits (OEI, autorotation, Cat. A).',mit:'Study alternative strategy. If not possible, No Go'},{t:'Close to aircraft/engine limits.'}]}
+      ]},
+      { id:'tn_env', title:'Environment', th:'สภาพแวดล้อม', group:'environment', factors:[
+        {id:'tn_e_tim',label:'Time of Flight',th:'เวลาบิน',opts:[{t:'Day.'},{t:'Dawn or dusk.'},{t:'Night.'}]},
+        {id:'tn_e_met',label:'Meteorological Conditions',th:'สภาพอุตุฯ',opts:[{t:'Good.'},{t:'Marginal VMC.'},{t:'IMC.'}]},
+        {id:'tn_e_wnd',label:'Wind',th:'ลม',opts:[{t:'Light.'},{t:'Sustained 15–30 kts.',mit:'Strong weather forecast studies mandatory'},{t:'> 30 kts. Gusting. Moderate/severe turbulence.'}]},
+        {id:'tn_e_cld',label:'Clouds',th:'เมฆ',opts:[{t:'No clouds within working altitude.'},{t:'Marginal ceiling.'},{t:'Flight between or on top of clouds. Mountains obscured.'}]},
+        {id:'tn_e_cfa',label:'Confine Area',th:'พื้นที่จำกัด',opts:[{t:'Prepared. (TLOF, FATO, ซีเมนต์ หรือ หญ้า)'},{t:'Unprepared. (เช่น ฝุ่น,...)'}]},
+        {id:'tn_e_brd',label:'Birds',th:'นก',opts:[{t:'NOTAM ไม่แจ้งเตือนนก'},{t:'NOTAM แจ้งเตือนนกหนาแน่น',mit:'Bird Strike Safety Procedures'}]},
+        {id:'tn_e_ran',label:'Rain',th:'ฝน',opts:[{t:'No rain.'},{t:'Light rain.'},{t:'Heavy showers or thunderstorms.',mit:'STOP! Cancel the flight if needed',stop:true}]},
+        {id:'tn_e_ice',label:'Icing',th:'น้ำแข็ง',opts:[{t:'No icing conditions.'},{t:'Marginal icing conditions.'},{t:'Probable icing in visible moisture.',mit:'STOP! Cancel the flight',stop:true}]},
+        {id:'tn_e_ter',label:'Terrain',th:'ภูมิประเทศ',opts:[{t:'Rural (flat…)'},{t:'City, suburban'},{t:'Mountainous, overwater, forest, desert…',mit:'Check performance and equipment. If not compliant, No Go.'}]}
+      ]},
+      { id:'tn_dst', title:'Destination', th:'จุดหมายปลายทาง', group:'destination', factors:[
+        {id:'tn_d_hel',label:'Elevated Helipad',th:'ลานจอดบนที่สูง',opts:[{t:'Category A'},{t:'Category B',mit:'ขึ้นอยู่กับ รปป.ฝูง'},{t:'Normal Category'}]},
+        {id:'tn_d_cfa',label:'Confine Area',th:'พื้นที่จำกัด',opts:[{t:'Familiar'},{t:'Unfamiliar',mit:'Reconnaissance procedure'}]}
+      ]},
+      { id:'tn_ext', title:'External Pressure', th:'แรงกดดันภายนอก', group:'external', factors:[
+        {id:'tn_e_imp',label:'Mission Importance',th:'ความสำคัญ',opts:[{t:'Low value mission. Easily cancelable.'},{t:'Medium value. Alternate transport or delay feasible.'},{t:'High value. To be completed as soon as possible.'}]}
+      ]}
+    ]
+  },
+
+  MS: {
+    typeName: 'ปฏิบัติภารกิจ (MISSION)',
+    crew1Title: 'PIC / IP / PILOT',
+    crew2Title: 'CO-PILOT',
+    thLow: .25, thMid: .50,
+    crew1Sections: [
+      { id:'ms_c1_pers', title:'Personal Conditions', th:'สภาพร่างกาย / จิตใจ', group:'personal', factors:[
+        {id:'ms_c1_ph', label:'Physical', th:'ร่างกาย',opts:[{t:'No problems. Physically in shape.'},{t:'Nuisance, not completely in shape.'},{t:'Headache, cold, fever, toothache.',mit:'STOP!! Get released from duty / นบ.สำรอง',stop:true}]},
+        {id:'ms_c1_med',label:'Medication',th:'ยา',opts:[{t:'No medications in the last 24 hours.'},{t:'Over the counter medication.'},{t:'Prescription medication.',mit:'STOP!! Get released from duty',stop:true}]},
+        {id:'ms_c1_slp',label:'Sleep',th:'การนอนหลับ',opts:[{t:'Well slept.'},{t:'Moderate sleep or no sleep in the last 13 hours.',mit:'Take a break — Get some rest before next flight'},{t:'Poor sleep. (ใช้เวลาเกิน 30 นาที, ตื่นกลางดึก>1/คืน, ตื่นกลางดึกนานกว่า 20 นาที/คืน)'}]},
+        {id:'ms_c1_fat',label:'Fatigue',th:'ความเหนื่อยล้า',opts:[{t:'No fatigue.'},{t:'Moderate fatigue.'},{t:'Mentally or physically fatigued.'}]},
+        {id:'ms_c1_fod',label:'Food & Drink',th:'อาหาร/น้ำ',opts:[{t:'Adequately nourished and hydrated.'},{t:'4–6 hrs without eating / 2–4 hrs without drinking.',mit:'Take a break — Get something to eat/drink before next flight'},{t:'> 6 hrs from last meal. Hot weather, no water on board.'}]},
+        {id:'ms_c1_phy',label:'Physiologic',th:'สรีรวิทยา',opts:[{t:'Physiologically relieved.'},{t:'Medium mission duration with no rest facilities.'},{t:'Long mission duration with no rest facilities.',mit:'STOP!! Report the flight',stop:true}]},
+        {id:'ms_c1_emo',label:'Emotion',th:'อารมณ์',opts:[{t:'Not emotionally involved.'},{t:'Emotionally involved. Little private problems.'},{t:'Emotionally stressed. Legal, financial or family problems.'}]}
+      ]},
+      { id:'ms_c1_rec', title:'Recency', th:'ความสมบูรณ์ทางการบิน', group:'recency', factors:[
+        {id:'ms_c1_sim',label:'Flight Simulator',th:'เครื่องจำลอง',opts:[{t:'2 times/year or 1 time in 6 months'},{t:'1 time/year'},{t:'Never. No course taken yet.',mit:'STOP!! Report the flight',stop:true}]},
+        {id:'ms_c1_tot',label:'Total Flight Time',th:'ชั่วโมงบินรวม',opts:[{t:'Over 3,000 hrs total.'},{t:'1,500–3,000 hrs total.',mit:'Particular strong briefing before the flight'},{t:'Below 1,500 hrs total.'}]},
+        {id:'ms_c1_typ',label:'Flight Time on Type',th:'ชั่วโมงบนแบบ',opts:[{t:'Over 300 hrs on type.'},{t:'100–300 hrs on type.',mit:'Take your time to prepare the flight'},{t:'Below 100 hrs on type.'}]},
+        {id:'ms_c1_lst',label:'Last Flight on Type',th:'บินครั้งล่าสุด',opts:[{t:'Within 1 month.'},{t:'Between 1–3 months.',mit:'No emergency procedure training on 1st flight'},{t:'Over 3 months.'}]}
+      ]},
+      { id:'ms_c1_base', title:'Operating Base', th:'ฐานปฏิบัติการ', group:'base', factors:[
+        {id:'ms_c1_opb',label:'Operating Base',th:'ฐานบิน',opts:[{t:'Well known. Regularly on shift. Last shift < 1 month.'},{t:'Partially known. Last shift < 3 months.',mit:'Take your time to prepare the flight'},{t:'New base or first four shifts on that base.'}]}
+      ]}
+    ],
+    crew2Sections: [
+      { id:'ms_c2_pers', title:'Personal Conditions', th:'สภาพร่างกาย / จิตใจ', group:'personal', factors:[
+        {id:'ms_c2_ph', label:'Physical', th:'ร่างกาย',opts:[{t:'No problems. Physically in shape.'},{t:'Nuisance, not completely in shape.'},{t:'Headache, cold, fever, toothache.',mit:'STOP!! Get released from duty',stop:true}]},
+        {id:'ms_c2_med',label:'Medication',th:'ยา',opts:[{t:'No medications in the last 24 hours.'},{t:'Over the counter medication.'},{t:'Prescription medication.',mit:'STOP!! Get released from duty',stop:true}]},
+        {id:'ms_c2_slp',label:'Sleep',th:'การนอนหลับ',opts:[{t:'Well slept.'},{t:'Moderate sleep or no sleep in the last 13 hours.',mit:'Take a break — Get some rest before next flight'},{t:'Poor sleep. (ใช้เวลาเกิน 30 นาที, ตื่นกลางดึก>1/คืน, ตื่นกลางดึกนานกว่า 20 นาที/คืน)'}]},
+        {id:'ms_c2_fat',label:'Fatigue',th:'ความเหนื่อยล้า',opts:[{t:'No fatigue. Mission in first part of shift.'},{t:'Mission in half part of shift. Moderate fatigue.'},{t:'Mission in last part of shift. Fatigued.'}]},
+        {id:'ms_c2_fod',label:'Food & Drink',th:'อาหาร/น้ำ',opts:[{t:'Adequately nourished and hydrated.'},{t:'4–6 hrs without eating / 2–4 hrs without drinking.',mit:'Take a break — Get something to eat/drink'},{t:'> 6 hrs from last meal. Hot weather, no water on board.'}]},
+        {id:'ms_c2_phy',label:'Physiologic',th:'สรีรวิทยา',opts:[{t:'Physiologically relieved.'},{t:'Medium mission duration with no rest facilities.'},{t:'Long mission duration with no rest facilities.',mit:'STOP!! Report the flight',stop:true}]},
+        {id:'ms_c2_emo',label:'Emotion',th:'อารมณ์',opts:[{t:'Not emotionally involved.'},{t:'Emotionally involved. Little private problems.'},{t:'Emotionally stressed. Legal, financial or family problems.'}]}
+      ]},
+      { id:'ms_c2_rec', title:'Recency', th:'ความสมบูรณ์ทางการบิน', group:'recency', factors:[
+        {id:'ms_c2_sim',label:'Flight Simulator',th:'เครื่องจำลอง',opts:[{t:'2 times/year or 1 time in 6 months'},{t:'Recurrent, 1 time/year'},{t:'Never. No course taken yet.',mit:'STOP!! Report the flight',stop:true}]},
+        {id:'ms_c2_tot',label:'Total Flight Time',th:'ชั่วโมงบินรวม',opts:[{t:'Over 1,000 hrs total.'},{t:'300–1,000 hrs total.',mit:'Particular strong briefing before the flight'},{t:'Below 300 hrs total.'}]},
+        {id:'ms_c2_typ',label:'Flight Time on Type',th:'ชั่วโมงบนแบบ',opts:[{t:'Over 300 hrs on type.'},{t:'100–300 hrs on type.',mit:'Particular strong briefing before the flight'},{t:'Below 100 hrs on type.'}]},
+        {id:'ms_c2_lst',label:'Last Flight on Type',th:'บินครั้งล่าสุด',opts:[{t:'Within 1 month.'},{t:'Between 1–3 months.'},{t:'Over 3 months.'}]}
+      ]},
+      { id:'ms_c2_base', title:'Operating Base', th:'ฐานปฏิบัติการ', group:'base', factors:[
+        {id:'ms_c2_opb',label:'Operating Base',th:'ฐานบิน',opts:[{t:'Well known. Regularly on shift. Last shift < 1 month.'},{t:'Partially known. Last shift < 3 months.',mit:'Take your time to prepare the flight'},{t:'New base or first four shifts on that base.'}]}
+      ]}
+    ],
+    sharedSections: [
+      { id:'ms_mis', title:'Mission', th:'ภารกิจ', group:'mission', factors:[
+        {id:'ms_m_pln',label:'Planning',th:'การวางแผน',opts:[{t:'Adequate. Thorough planning.'},{t:'Approximate or experience based.'},{t:'Rushed or inadequate.'}]},
+        {id:'ms_m_sch',label:'Mission Scheduling',th:'กำหนดเวลา',opts:[{t:'Well before scheduled flight.'},{t:'Not scheduled — some planning time allowed.',mit:'Particular attention. Try to delay if possible. If not, NO GO'},{t:'Immediate flight.'}]},
+        {id:'ms_m_cmp',label:'Mission Complexity',th:'ความซับซ้อน',opts:[{t:'Easy flight. Well known mission typology.'},{t:'Medium complexity. Mission typology seen few times.',mit:'Particular study of flight profile'},{t:'Complex flight. Never flown this mission typology.'}]},
+        {id:'ms_m_rul',label:'Flight Rules',th:'กฎการบิน',opts:[{t:'VFR.'},{t:'VMC IFR or night flight.',mit:'Strong weather forecast studies mandatory. Check IFR minimum requirements'},{t:'IMC IFR.'}]}
+      ]},
+      { id:'ms_acf', title:'Aircraft', th:'อากาศยาน', group:'aircraft', factors:[
+        {id:'ms_a_fit',label:'Helicopter Fitted for Mission',th:'พร้อมภารกิจ',opts:[{t:'Yes.'},{t:'Partially.'},{t:'Not.'}]},
+        {id:'ms_a_ano',label:'Known Anomalies',th:'ความผิดปกติ',opts:[{t:'None.'},{t:'Less than 2.',mit:'Discuss countermeasures for equipment loss/degradation'},{t:'More than 2.'}]},
+        {id:'ms_a_lod',label:'Loadsheet',th:'แผ่นน้ำหนัก',opts:[{t:'Done.'},{t:'Not done, but within limits by experience.',mit:'Calculate load sheet. Verify performance compliance'},{t:'Not done and near aircraft limitation.'}]},
+        {id:'ms_a_prf',label:'Performance (Weight & Density Alt.)',th:'สมรรถนะ',opts:[{t:'Well under limits.'},{t:'Close to limits only in cruise.',mit:'Study alternative strategy. If not possible, No Go'},{t:'Close to limits during operations.'}]}
+      ]},
+      { id:'ms_env', title:'Environment', th:'สภาพแวดล้อม', group:'environment', factors:[
+        {id:'ms_e_tim',label:'Time of Flight',th:'เวลาบิน',opts:[{t:'Day.'},{t:'Dawn or dusk.'},{t:'Night.'}]},
+        {id:'ms_e_met',label:'Meteorological Conditions',th:'สภาพอุตุฯ',opts:[{t:'Good.'},{t:'Marginal VMC.'},{t:'IMC.'}]},
+        {id:'ms_e_wnd',label:'Wind',th:'ลม',opts:[{t:'Light.'},{t:'Sustained.',mit:'Strong weather forecast studies mandatory'},{t:'Strong or gusting.'}]},
+        {id:'ms_e_ran',label:'Rain',th:'ฝน',opts:[{t:'No rain.'},{t:'Light rain.'},{t:'Heavy showers or thunderstorms.',mit:'STOP! Cancel the flight if needed',stop:true}]},
+        {id:'ms_e_brd',label:'Birds',th:'นก',opts:[{t:'NOTAM ไม่แจ้งเตือนนก'},{t:'NOTAM แจ้งเตือนนกหนาแน่น',mit:'Bird Strike Safety Procedures'}]},
+        {id:'ms_e_cld',label:'Clouds',th:'เมฆ',opts:[{t:'No clouds within working altitude.'},{t:'Marginal ceiling.'},{t:'Flight between or on top of clouds. Mountains obscured.'}]},
+        {id:'ms_e_cfa',label:'Confine Area',th:'พื้นที่จำกัด',opts:[{t:'Prepared. (TLOF, FATO, ซีเมนต์ หรือ หญ้า)'},{t:'Unprepared. (เช่น ฝุ่น,...)'}]},
+        {id:'ms_e_ter',label:'Terrain',th:'ภูมิประเทศ',opts:[{t:'Rural (flat…)'},{t:'City, suburban'},{t:'Mountainous, overwater, forest, desert…',mit:'Check performance and equipment. If not compliant, No Go.'}]},
+        {id:'ms_e_ice',label:'Icing',th:'น้ำแข็ง',opts:[{t:'No icing conditions.'},{t:'Marginal icing conditions.'},{t:'Probable icing in visible moisture.',mit:'STOP! Cancel the flight',stop:true}]}
+      ]},
+      { id:'ms_dst', title:'Destination', th:'จุดหมายปลายทาง', group:'destination', factors:[
+        {id:'ms_d_hel',label:'Elevated Helipad',th:'ลานจอดบนที่สูง',opts:[{t:'Category A'},{t:'Category B'},{t:'Normal Category',mit:'ขึ้นอยู่กับ รปป.ฝูง'}]},
+        {id:'ms_d_cfa',label:'Confine Area',th:'พื้นที่จำกัด',opts:[{t:'Familiar'},{t:'Unfamiliar',mit:'Reconnaissance procedure'}]}
+      ]},
+      { id:'ms_ext', title:'External Pressure', th:'แรงกดดันภายนอก', group:'external', factors:[
+        {id:'ms_e_imp',label:'Mission Importance',th:'ความสำคัญ',opts:[{t:'Low value mission. Easily cancelable.'},{t:'Medium value. Alternate transport or delay feasible.',mit:'Particular attention. Try to delay if possible. If not, NO GO'},{t:'High value. To be completed as soon as possible.'}]}
+      ]}
+    ]
+  }
+};
+
+// group display info
+const GROUPS = {
+  personal:    { label:'Personal',     th:'ร่างกาย/จิตใจ' },
+  recency:     { label:'Recency',      th:'ความสมบูรณ์' },
+  base:        { label:'Base',         th:'ฐานปฏิบัติการ' },
+  mission:     { label:'Mission',      th:'ภารกิจ' },
+  aircraft:    { label:'Aircraft',     th:'อากาศยาน' },
+  environment: { label:'Environment',  th:'สภาพแวดล้อม' },
+  destination: { label:'Destination',  th:'จุดหมาย' },
+  external:    { label:'Pressure',     th:'แรงกดดัน' }
+};
+const GROUP_ORDER = ['personal','recency','base','mission','aircraft','environment','destination','external'];
+
+// ─────────────────────────────────────────────────
+// APP STATE
+// ─────────────────────────────────────────────────
+let app = { type:'TN', role:'c1', name:'', answers:{} };
+let radarChart = null;
+let confirmOnce = false;
+
+// ─────────────────────────────────────────────────
+// SETUP STEP
+// ─────────────────────────────────────────────────
+function setType(t) {
+  app.type = t;
+  ['TN','MS'].forEach(id => {
+    document.getElementById(`tab-${id}-btn`).classList.toggle('active', id === t);
+  });
+  const f = FORMS[t];
+  document.getElementById('role-c1-title').textContent = f.crew1Title;
+  document.getElementById('role-c2-title').textContent = f.crew2Title;
+  document.getElementById('setup-no-lbl').textContent = t === 'TN' ? 'Flight No.' : 'Mission No.';
+}
+
+function setRole(r) {
+  app.role = r;
+  ['c1','c2'].forEach(id => document.getElementById(`role-${id}`).classList.toggle('active', id === r));
+}
+
+function startAssessment() {
+  const name = document.getElementById('setup-name').value.trim();
+  if (!name || !app.role) {
+    document.getElementById('start-err').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('start-err').classList.add('hidden');
+  app.name = name;
+  app.answers = {};
+  confirmOnce = false;
+  renderAssessment();
+  show('s2');
+}
+
+// ─────────────────────────────────────────────────
+// ASSESSMENT STEP
+// ─────────────────────────────────────────────────
+function getActiveSections() {
+  const f = FORMS[app.type];
+  const roleSecs = app.role === 'c1' ? f.crew1Sections : f.crew2Sections;
+  return [...roleSecs, ...f.sharedSections];
+}
+
+function renderAssessment() {
+  const f = FORMS[app.type];
+  const roleTitle = app.role === 'c1' ? f.crew1Title : f.crew2Title;
+  document.getElementById('a2-label').textContent = `${f.typeName.split(' ')[0]} · ${roleTitle}`;
+
+  const sections = getActiveSections();
+  const container = document.getElementById('a2-sections');
+  container.innerHTML = sections.map(sec => `
+    <div class="card overflow-hidden">
+      <div class="sec-hdr" onclick="toggleCol('sb_${sec.id}',this)">
+        <div>
+          <span style="font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#78716c">${sec.title}</span>
+          <span style="font-size:12px;color:#a8a29e;margin-left:8px">${sec.th||''}</span>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div id="sb_${sec.id}" class="col-body" style="max-height:9999px">
+        ${sec.factors.map(f => renderFactor(f)).join('')}
+      </div>
+    </div>`).join('');
+
+  updateA2Score();
+  const totalQ = sections.flatMap(s => s.factors).length;
+  document.getElementById('a2-total').textContent = totalQ;
+}
+
+function renderFactor(f) {
+  const opts = f.opts.map((o,i) => {
+    const mitHtml = o.mit ? `<div id="${f.id}_m${i}" class="mit ${o.stop?'stp':'amb'}">${o.stop?'🚫 ':'⚠️ '}${o.mit}</div>` : '';
+    return `<label class="opt" id="${f.id}_c${i}" onclick="pick('${f.id}',${i})">
+      <span class="opt-radio"></span>
+      <span class="opt-text">${o.t}${mitHtml}</span>
+    </label>`;
+  }).join('');
+  return `<div class="factor-wrap">
+    <div style="margin-bottom:8px">
+      <span style="font-size:13px;font-weight:600;color:#1c1917">${f.label}</span>
+      <span style="font-size:12px;color:#a8a29e;margin-left:6px">${f.th||''}</span>
+    </div>${opts}</div>`;
+}
+
+function pick(factorId, idx) {
+  app.answers[factorId] = idx;
+  const sections = getActiveSections();
+  const factor = sections.flatMap(s=>s.factors).find(f=>f.id===factorId);
+  if (!factor) return;
+  factor.opts.forEach((_,i) => {
+    const c = document.getElementById(`${factorId}_c${i}`);
+    if (c) c.className = 'opt';
+    const m = document.getElementById(`${factorId}_m${i}`);
+    if (m) m.classList.remove('show');
+  });
+  const card = document.getElementById(`${factorId}_c${idx}`);
+  if (card) card.classList.add(`sel-${idx}`);
+  const mit = document.getElementById(`${factorId}_m${idx}`);
+  if (mit) mit.classList.add('show');
+  updateA2Score();
+  confirmOnce = false;
+}
+
+function sectionMax(sec) {
+  return sec.factors.reduce((a,f) => a + (f.opts.length - 1), 0);
+}
+
+function totalMaxForRole() {
+  return getActiveSections().reduce((a,s) => a + sectionMax(s), 0);
+}
+
+function totalScoreForRole() {
+  return getActiveSections().flatMap(s=>s.factors).reduce((a,f) => a + (app.answers[f.id]??0), 0);
+}
+
+function answeredCount() {
+  const facts = getActiveSections().flatMap(s=>s.factors);
+  return facts.filter(f => app.answers[f.id] !== undefined).length;
+}
+
+function getRiskClass(score, max) {
+  const r = score / max;
+  return r <= FORMS[app.type].thLow ? 'rl-low' : r <= FORMS[app.type].thMid ? 'rl-mid' : 'rl-high';
+}
+
+function getRiskText(score, max) {
+  const r = score / max;
+  return r <= FORMS[app.type].thLow ? 'GO' : r <= FORMS[app.type].thMid ? 'CAUTION' : 'NO-GO';
+}
+
+function updateA2Score() {
+  const sections = getActiveSections();
+  const total = totalScoreForRole();
+  const max = totalMaxForRole();
+  const ans = answeredCount();
+  const totalQ = sections.flatMap(s=>s.factors).length;
+  const pct = totalQ ? Math.round(ans/totalQ*100) : 0;
+  const rc = getRiskClass(total, max);
+  const rt = getRiskText(total, max);
+  const pc = rc==='rl-low'?'#34d399': rc==='rl-mid'?'#fbbf24':'#f87171';
+
+  const badge = document.getElementById('a2-risk');
+  badge.className = `risk-badge ${rc}`;
+  badge.textContent = rt;
+
+  document.getElementById('a2-answered').textContent = ans;
+  const prog = document.getElementById('a2-prog');
+  prog.style.width = pct+'%';
+  prog.style.background = pc;
+}
+
+function confirmAssessment() {
+  const sections = getActiveSections();
+  const totalQ = sections.flatMap(s=>s.factors).length;
+  const ans = answeredCount();
+  if (ans < totalQ && !confirmOnce) {
+    confirmOnce = true;
+    document.getElementById('a2-warn').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('a2-warn').classList.add('hidden');
+  showReport();
+  show('s3');
+  submitToGoogleSheet();
+}
+
+// ─────────────────────────────────────────────────
+// REPORT STEP
+// ─────────────────────────────────────────────────
+function formatThaiDate(dateStr) {
+  if (!dateStr) return '—';
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return `${String(d).padStart(2,'0')} ${months[m-1]}${y + 543}`;
+}
+
+function getActiveMitigations() {
+  const result = [];
+  getActiveSections().forEach(sec => {
+    const items = sec.factors
+      .filter(f => {
+        const idx = app.answers[f.id];
+        return idx !== undefined && f.opts[idx]?.mit;
+      })
+      .map(f => ({
+        label:  f.label,
+        th:     f.th || '',
+        mit:    f.opts[app.answers[f.id]].mit,
+        isStop: !!f.opts[app.answers[f.id]].stop
+      }));
+    if (items.length) result.push({ title: sec.title, th: sec.th || '', items });
+  });
+  return result;
+}
+
+function showReport() {
+  const f = FORMS[app.type];
+  const roleTitle = app.role === 'c1' ? f.crew1Title : f.crew2Title;
+  const now = new Date();
+  const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  // header
+  document.getElementById('r-name').textContent  = app.name;
+  document.getElementById('r-role').textContent  = roleTitle;
+  document.getElementById('r-type').textContent  = f.typeName;
+  document.getElementById('r-date').textContent  = formatThaiDate(document.getElementById('setup-date').value);
+  document.getElementById('r-no').textContent    = document.getElementById('setup-no').value || '—';
+  document.getElementById('r-ac').textContent    = document.getElementById('setup-ac').value || '—';
+  document.getElementById('r-route').textContent = document.getElementById('setup-route').value || '—';
+  document.getElementById('r-time').textContent  = timeStr;
+
+  // overall risk
+  const total = totalScoreForRole();
+  const max   = totalMaxForRole();
+  const rc = getRiskClass(total, max);
+  const rt = getRiskText(total, max);
+  const pc = rc==='rl-low'?'#34d399': rc==='rl-mid'?'#fbbf24':'#f87171';
+  const pct = max ? Math.round(total/max*100) : 0;
+
+  const rb = document.getElementById('r-risk-badge');
+  rb.className = `risk-badge ${rc}`;
+  rb.textContent = rt;
+  document.getElementById('r-score').textContent = total;
+  document.getElementById('r-max').textContent = max;
+  const rp = document.getElementById('r-prog');
+  rp.style.width = pct+'%';
+  rp.style.background = pc;
+
+  // section breakdown
+  const sections = getActiveSections();
+  const groupScores = {};
+  sections.forEach(sec => {
+    const g = sec.group;
+    if (!groupScores[g]) groupScores[g] = { score:0, max:0, title: sec.title, th: sec.th };
+    sec.factors.forEach(f => {
+      groupScores[g].score += (app.answers[f.id]??0);
+      groupScores[g].max   += (f.opts.length - 1);
+    });
+  });
+
+  const secEl = document.getElementById('r-sections');
+  secEl.innerHTML = GROUP_ORDER
+    .filter(g => groupScores[g] && groupScores[g].max > 0)
+    .map(g => {
+      const gs = groupScores[g];
+      const gPct = gs.max ? Math.round(gs.score/gs.max*100) : 0;
+      const gColor = gPct<=25?'#34d399': gPct<=50?'#fbbf24':'#f87171';
+      return `<div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span style="font-weight:600;color:#44403c">${gs.title} <span style="color:#a8a29e;font-weight:400">${gs.th}</span></span>
+          <span style="color:#78716c">${gs.score}/${gs.max}</span>
+        </div>
+        <div class="sec-bar-bg">
+          <div class="sec-bar-fill" style="width:${gPct}%;background:${gColor}"></div>
+        </div>
+      </div>`;
+    }).join('');
+
+  // high risk items
+  const highItems = sections.flatMap(sec =>
+    sec.factors.filter(f => (app.answers[f.id]??-1) === f.opts.length-1 && f.opts.length >= 3)
+      .map(f => ({ sec:sec.title, label:f.label, text:f.opts[f.opts.length-1].t }))
+  );
+
+  const hiWrap = document.getElementById('r-high-wrap');
+  const hiEl = document.getElementById('r-high-items');
+  if (highItems.length === 0) {
+    hiWrap.style.display = 'none';
+  } else {
+    hiWrap.style.display = '';
+    hiEl.innerHTML = highItems.map(h =>
+      `<div class="risk-item"><span style="font-size:11px;color:#a8a29e;display:block">${h.sec} · ${h.label}</span>${h.text}</div>`
+    ).join('');
+  }
+
+  // mitigation notices grouped by section
+  const mitGroups = getActiveMitigations();
+  const mitWrap = document.getElementById('r-mit-wrap');
+  const mitEl   = document.getElementById('r-mit-items');
+  if (mitGroups.length === 0) {
+    mitWrap.style.display = 'none';
+  } else {
+    mitWrap.style.display = '';
+    mitEl.innerHTML = mitGroups.map(grp => `
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#78716c;margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid #f5f5f4">
+          ${grp.title} <span style="color:#a8a29e;font-weight:400;text-transform:none">${grp.th}</span>
+        </div>
+        ${grp.items.map(it => `
+          <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:4px;padding:6px 10px;border-radius:6px;background:${it.isStop?'#fff1f2':'#fffbeb'};border-left:3px solid ${it.isStop?'#f43f5e':'#f59e0b'}">
+            <span style="font-size:11px;flex-shrink:0;margin-top:1px">${it.isStop?'🚫':'⚠️'}</span>
+            <div>
+              <span style="font-size:11px;font-weight:600;color:${it.isStop?'#be123c':'#92400e'}">${it.label}</span>
+              <span style="font-size:12px;color:${it.isStop?'#9f1239':'#78350f'};display:block;margin-top:1px">${it.mit}</span>
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+  }
+
+  // radar chart
+  const radarValues = GROUP_ORDER
+    .filter(g => groupScores[g] && groupScores[g].max > 0)
+    .map(g => {
+      const gs = groupScores[g];
+      return gs.max ? Math.round(gs.score/gs.max*100) : 0;
+    });
+  const radarLabels = GROUP_ORDER
+    .filter(g => groupScores[g] && groupScores[g].max > 0)
+    .map(g => GROUPS[g].label);
+
+  if (radarChart) radarChart.destroy();
+  const ctx = document.getElementById('radar-chart').getContext('2d');
+  const chartColor = rc==='rl-low'?'52,211,153': rc==='rl-mid'?'251,191,36':'248,113,113';
+  radarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: radarLabels,
+      datasets: [{
+        data: radarValues,
+        backgroundColor: `rgba(${chartColor},0.15)`,
+        borderColor: `rgb(${chartColor})`,
+        pointBackgroundColor: `rgb(${chartColor})`,
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: `rgb(${chartColor})`,
+        borderWidth: 2,
+        pointRadius: 4
+      }]
+    },
+    options: {
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { stepSize: 25, display: false },
+          grid: { color: '#e7e5e4' },
+          angleLines: { color: '#e7e5e4' },
+          pointLabels: { font: { size: 11, family:'Sarabun' }, color:'#78716c' }
+        }
+      },
+      plugins: { legend: { display:false }, tooltip: {
+        callbacks: { label: ctx => ` ${ctx.raw}%` }
+      }},
+      animation: { duration: 500 }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────
+function show(id) {
+  ['s1','s2','s3'].forEach(s => {
+    const el = document.getElementById(s);
+    if (s === id) el.removeAttribute('hidden');
+    else el.setAttribute('hidden','');
+  });
+  window.scrollTo(0,0);
+}
+
+function goSetup() {
+  show('s1');
+}
+
+function toggleCol(bodyId, hdrEl) {
+  const body = document.getElementById(bodyId);
+  if (!body) return;
+  const open = body.style.maxHeight !== '0px' && !body.classList.contains('shut');
+  if (open) { body.style.maxHeight='0px'; body.classList.add('shut'); if(hdrEl) hdrEl.classList.add('collapsed'); }
+  else { body.style.maxHeight='9999px'; body.classList.remove('shut'); if(hdrEl) hdrEl.classList.remove('collapsed'); }
+}
+
+// ─────────────────────────────────────────────────
+// PRINT / PDF EXPORT
+// ─────────────────────────────────────────────────
+function renderPrintA4() {
+  const f    = FORMS[app.type];
+  const role = app.role === 'c1' ? f.crew1Title : f.crew2Title;
+  const now  = new Date();
+  const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const total = totalScoreForRole();
+  const max   = totalMaxForRole();
+  const pct   = max ? Math.round(total / max * 100) : 0;
+  const rc    = getRiskClass(total, max);
+  const rt    = getRiskText(total, max);
+  const pc    = rc==='rl-low'?'#16a34a': rc==='rl-mid'?'#d97706':'#dc2626';
+  const badgeCls = rc==='rl-low'?'pa-badge-go': rc==='rl-mid'?'pa-badge-cau':'pa-badge-nogo';
+
+  // flight info
+  const flDate  = formatThaiDate(document.getElementById('setup-date').value);
+  const flNo    = document.getElementById('setup-no').value     || '—';
+  const flAc    = document.getElementById('setup-ac').value     || '—';
+  const flRoute = document.getElementById('setup-route').value  || '—';
+
+  document.getElementById('pa-datetime').innerHTML =
+    `วันที่ ${flDate} &nbsp;|&nbsp; เวลา ${timeStr}`;
+  document.getElementById('pa-form-lbl').textContent =
+    `${app.type === 'TN' ? 'FRAT-TN · การฝึกบิน' : 'FRAT-MS · ปฏิบัติภารกิจ'}`;
+
+  // info table cells
+  document.getElementById('pa-v-name').textContent  = app.name;
+  document.getElementById('pa-v-role').textContent  = role;
+  document.getElementById('pa-v-date').textContent  = flDate;
+  document.getElementById('pa-v-no').textContent    = flNo;
+  document.getElementById('pa-v-ac').textContent    = flAc;
+  document.getElementById('pa-v-route').textContent = flRoute;
+  document.getElementById('pa-v-time').textContent  = timeStr;
+  document.getElementById('pa-v-type').textContent  = app.type === 'TN' ? 'การฝึกบิน' : 'ปฏิบัติภารกิจ';
+
+  // risk badge
+  const b = document.getElementById('pa-badge-el');
+  b.className = `pa-badge-print ${badgeCls}`;
+  b.textContent = rt;
+  document.getElementById('pa-score-txt').textContent  = `${total} / ${max} คะแนน`;
+  document.getElementById('pa-pct-txt').textContent    = `(${pct}% ของคะแนนสูงสุด)`;
+  const pf = document.getElementById('pa-prog-fill');
+  pf.style.width      = pct + '%';
+  pf.style.background = pc;
+
+  // section breakdown
+  const sections = getActiveSections();
+  const groupScores = {};
+  sections.forEach(sec => {
+    const g = sec.group;
+    if (!groupScores[g]) groupScores[g] = { score:0, max:0, title:sec.title, th:sec.th };
+    sec.factors.forEach(f => {
+      groupScores[g].score += (app.answers[f.id]??0);
+      groupScores[g].max   += (f.opts.length - 1);
+    });
+  });
+
+  const secHtml = GROUP_ORDER
+    .filter(g => groupScores[g]?.max > 0)
+    .map(g => {
+      const gs = groupScores[g];
+      const gp = gs.max ? Math.round(gs.score / gs.max * 100) : 0;
+      const gc = gp<=25?'#16a34a': gp<=50?'#d97706':'#dc2626';
+      const pctCol = gp<=25?'color:#15803d': gp<=50?'color:#a16207':'color:#be123c';
+      return `<div class="pa-sec-row">
+        <div class="pa-sec-label">${gs.title}</div>
+        <div class="pa-sec-bar-bg"><div class="pa-sec-bar-fill" style="width:${gp}%;background:${gc}"></div></div>
+        <div class="pa-sec-pct" style="${pctCol}">${gp}%</div>
+      </div>`;
+    }).join('');
+  document.getElementById('pa-sec-body').innerHTML = secHtml;
+
+  // mitigation notices grouped by section
+  const mitGroups = getActiveMitigations();
+  const mitHtml = mitGroups.length === 0
+    ? `<div class="pa-none" style="color:#15803d">✓ ไม่มีคำแนะนำเพิ่มเติม</div>`
+    : mitGroups.map(grp => `
+        <div style="margin-bottom:5pt">
+          <div style="font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#475569;border-bottom:0.5pt solid #cbd5e1;padding-bottom:2pt;margin-bottom:3pt">
+            ${grp.title} <span style="font-weight:400;color:#94a3b8">${grp.th}</span>
+          </div>
+          ${grp.items.map(it => `
+            <div style="display:flex;gap:5pt;margin-bottom:3pt;padding:3pt 5pt;border-left:2.5pt solid ${it.isStop?'#dc2626':'#f59e0b'};background:${it.isStop?'#fff1f2':'#fffbeb'}">
+              <span style="font-size:7.5pt;flex-shrink:0">${it.isStop?'🚫':'⚠️'}</span>
+              <div>
+                <span style="font-size:7.5pt;font-weight:700;color:${it.isStop?'#be123c':'#92400e'}">${it.label}: </span>
+                <span style="font-size:7.5pt;color:${it.isStop?'#9f1239':'#78350f'}">${it.mit}</span>
+              </div>
+            </div>`).join('')}
+        </div>`).join('');
+  document.getElementById('pa-mit-body').innerHTML = mitHtml;
+
+  // signature name
+  document.getElementById('pa-sig-name-el').textContent = app.name;
+}
+
+let printRadarChart = null;
+
+function renderPrintRadar() {
+  const sections = getActiveSections();
+  const groupScores = {};
+  sections.forEach(sec => {
+    const g = sec.group;
+    if (!groupScores[g]) groupScores[g] = { score:0, max:0 };
+    sec.factors.forEach(f => {
+      groupScores[g].score += (app.answers[f.id]??0);
+      groupScores[g].max   += (f.opts.length - 1);
+    });
+  });
+  const labels = GROUP_ORDER.filter(g => groupScores[g]?.max > 0).map(g => GROUPS[g].label);
+  const values = GROUP_ORDER.filter(g => groupScores[g]?.max > 0).map(g => {
+    const gs = groupScores[g]; return gs.max ? Math.round(gs.score/gs.max*100) : 0;
+  });
+  const rc = getRiskClass(totalScoreForRole(), totalMaxForRole());
+  const chartColor = rc==='rl-low'?'52,211,153': rc==='rl-mid'?'251,191,36':'248,113,113';
+
+  if (printRadarChart) printRadarChart.destroy();
+  const ctx = document.getElementById('pa-radar-canvas').getContext('2d');
+  printRadarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets:[{
+        data: values,
+        backgroundColor: `rgba(${chartColor},.18)`,
+        borderColor: `rgb(${chartColor})`,
+        pointBackgroundColor: `rgb(${chartColor})`,
+        pointBorderColor: '#fff',
+        borderWidth: 1.5, pointRadius: 2
+      }]
+    },
+    options: {
+      animation: false,
+      maintainAspectRatio: false,
+      devicePixelRatio: 4,
+      scales: { r: {
+        beginAtZero:true, max:100,
+        ticks:{ stepSize:25, display:false },
+        grid:{ color:'#e2e8f0' }, angleLines:{ color:'#e2e8f0' },
+        pointLabels:{ font:{ size:7.5, family:'Sarabun' }, color:'#475569' }
+      }},
+      plugins:{ legend:{ display:false } },
+      layout:{ padding: 4 }
+    }
+  });
+}
+
+function preparePrint() {
+  renderPrintA4();
+  renderPrintRadar();
+  setTimeout(() => window.print(), 150);
+}
+
+// ─────────────────────────────────────────────────
+// GOOGLE SHEET INTEGRATION
+// ─────────────────────────────────────────────────
+let gasUrl = '';
+
+function toggleGasSettings() {
+  const body    = document.getElementById('gas-settings-body');
+  const chevron = document.getElementById('gas-chevron');
+  const open    = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  chevron.textContent = open ? '▼' : '▲';
+}
+
+function saveGasUrl() {
+  const val = document.getElementById('gas-url-input').value.trim();
+  gasUrl = val;
+  localStorage.setItem('frat_gas_url', val);
+  const msg = document.getElementById('gas-save-msg');
+  msg.classList.remove('hidden');
+  setTimeout(() => msg.classList.add('hidden'), 2000);
+}
+
+function setSheetStatus(state, detail) {
+  const el = document.getElementById('r-sync-status');
+  if (!el) return;
+  const d = detail ? ` · ${detail}` : '';
+  if      (state === 'syncing') el.innerHTML = '<span style="color:#78716c">🔄 กำลังบันทึก...</span>';
+  else if (state === 'ok')      el.innerHTML = `<span style="color:#15803d">✅ บันทึกแล้ว${d}</span>`;
+  else if (state === 'error')   el.innerHTML = `<span style="color:#be123c" title="${detail || ''}">⚠️ บันทึกไม่สำเร็จ</span>`;
+  else                          el.innerHTML = '';
+}
+
+function collectAssessmentData() {
+  const f         = FORMS[app.type];
+  const roleTitle = app.role === 'c1' ? f.crew1Title : f.crew2Title;
+  const now       = new Date();
+  const total     = totalScoreForRole();
+  const max       = totalMaxForRole();
+  const pct       = max ? Math.round(total / max * 100) : 0;
+
+  const sections = getActiveSections();
+  const groupScores = {};
+  sections.forEach(sec => {
+    const g = sec.group;
+    if (!groupScores[g]) groupScores[g] = { score: 0, max: 0 };
+    sec.factors.forEach(f => {
+      groupScores[g].score += (app.answers[f.id] ?? 0);
+      groupScores[g].max   += (f.opts.length - 1);
+    });
+  });
+
+  const highRiskItems = sections.flatMap(sec =>
+    sec.factors
+      .filter(f => (app.answers[f.id] ?? -1) === f.opts.length - 1 && f.opts.length >= 3)
+      .map(f => `${sec.title}: ${f.label}`)
+  );
+
+  const mitigations = getActiveMitigations().flatMap(grp =>
+    grp.items.map(it => `[${grp.title}] ${it.label}: ${it.mit}`)
+  );
+
+  return {
+    date:         formatThaiDate(document.getElementById('setup-date').value),
+    time:         now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0'),
+    assessor:     app.name,
+    role:         roleTitle,
+    formType:     app.type,
+    flightNo:     document.getElementById('setup-no').value    || '',
+    aircraft:     document.getElementById('setup-ac').value    || '',
+    route:        document.getElementById('setup-route').value || '',
+    totalScore:   total,
+    maxScore:     max,
+    scorePct:     pct,
+    riskLevel:    getRiskText(total, max),
+    groupScores,
+    highRiskItems,
+    mitigations
+  };
+}
+
+async function submitToGoogleSheet() {
+  if (!gasUrl) return;
+  setSheetStatus('syncing');
+  try {
+    // mode: 'no-cors' + text/plain = simple request (no CORS preflight)
+    // required for GitHub Pages → Google Apps Script cross-origin POST
+    // response is opaque (status 0) — GAS still processes and saves the data
+    await fetch(gasUrl, {
+      method:   'POST',
+      mode:     'no-cors',
+      redirect: 'follow',
+      headers:  { 'Content-Type': 'text/plain' },
+      body:     JSON.stringify(collectAssessmentData())
+    });
+    setSheetStatus('ok', 'ตรวจสอบใน Google Sheet');
+  } catch (err) {
+    setSheetStatus('error', err.message);
+  }
+}
+
+// ─────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('setup-date').value = new Date().toISOString().split('T')[0];
+  setType('TN');
+  setRole('c1');
+  // restore saved Apps Script URL
+  const saved = localStorage.getItem('frat_gas_url') || '';
+  if (saved) {
+    gasUrl = saved;
+    document.getElementById('gas-url-input').value = saved;
+  }
+});
+</script>
+
+<!-- ══════════════════ A4 PRINT VIEW ══════════════════ -->
+<div id="print-a4">
+
+  <!-- ① Header band -->
+  <div class="pa-header">
+    <div class="pa-emblem">🚁</div>
+    <div>
+      <div class="pa-title-main">Flight Risk Assessment Form</div>
+      <div class="pa-title-sub">แบบประเมินความเสี่ยงก่อนทำการบิน</div>
+      <div class="pa-title-form" id="pa-form-lbl">FRAT</div>
+    </div>
+    <div class="pa-meta">
+      <div id="pa-datetime"></div>
+      <div style="margin-top:2pt">PRE-FLIGHT BRIEFING DOCUMENT</div>
+      <div>PAGE 1 OF 1</div>
+    </div>
+  </div>
+
+  <!-- ② Flight & assessor info -->
+  <table class="pa-info">
+    <tr>
+      <td class="lbl">ผู้ประเมิน / Assessor</td>
+      <td class="val" id="pa-v-name"></td>
+      <td class="lbl">หน้าที่ / Role</td>
+      <td class="val" id="pa-v-role"></td>
+    </tr>
+    <tr>
+      <td class="lbl">ประเภท / Form Type</td>
+      <td class="val" id="pa-v-type"></td>
+      <td class="lbl">Flight / Mission No.</td>
+      <td class="val" id="pa-v-no"></td>
+    </tr>
+    <tr>
+      <td class="lbl">วันที่ / Date</td>
+      <td class="val" id="pa-v-date"></td>
+      <td class="lbl">เวลา / Time</td>
+      <td class="val" id="pa-v-time"></td>
+    </tr>
+    <tr>
+      <td class="lbl">แบบอากาศยาน / Aircraft</td>
+      <td class="val" id="pa-v-ac"></td>
+      <td class="lbl">เส้นทาง / Route</td>
+      <td class="val" id="pa-v-route"></td>
+    </tr>
+  </table>
+
+  <!-- ③ 3-col: Risk result | Section breakdown + Radar -->
+  <div style="display:grid;grid-template-columns:152pt 1fr 148pt;gap:5pt;margin-bottom:5pt">
+
+    <!-- Risk result -->
+    <div class="pa-box">
+      <div class="pa-box-hdr">ผลการประเมิน · Risk Level</div>
+      <div class="pa-box-body">
+        <div class="pa-badge-wrap">
+          <div id="pa-badge-el" class="pa-badge-print pa-badge-go">GO</div>
+        </div>
+        <div class="pa-score-line" id="pa-score-txt"></div>
+        <div class="pa-score-sub"  id="pa-pct-txt"></div>
+        <div class="pa-prog-bg">
+          <div id="pa-prog-fill" class="pa-prog-fill" style="width:0%;background:#16a34a"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:6pt;color:#94a3b8;margin-top:2pt;padding:0 2pt">
+          <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section breakdown bars -->
+    <div class="pa-box">
+      <div class="pa-box-hdr">คะแนนแต่ละหมวด · Section Breakdown</div>
+      <div class="pa-box-body" id="pa-sec-body"></div>
+    </div>
+
+    <!-- Radar chart — compact, same height as breakdown -->
+    <div class="pa-box">
+      <div class="pa-box-hdr">Risk Radar</div>
+      <div style="display:flex;align-items:center;justify-content:center;padding:4pt;height:126pt;overflow:hidden">
+        <canvas id="pa-radar-canvas"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ⑤ Mitigation notices — full width -->
+  <div class="pa-box" style="margin-bottom:5pt">
+    <div class="pa-box-hdr">คำแนะนำเพิ่มเติม · Mitigation Notices &amp; Recommendations</div>
+    <div class="pa-box-body" id="pa-mit-body"
+         style="column-count:2;column-gap:12pt;padding:6pt 8pt"></div>
+  </div>
+
+  <!-- ⑦ Legend -->
+  <div class="pa-legend">
+    <span class="pa-leg-go">■ GO (≤ 25%)</span>
+    <span class="pa-leg-cau">■ CAUTION (26 – 50%)</span>
+    <span class="pa-leg-nogo">■ NO-GO (&gt; 50%)</span>
+    <span class="pa-leg-note">เกณฑ์คะแนนรวมทั้งฟอร์ม · ประเมินโดย FRAT System</span>
+  </div>
+
+  <!-- ⑥ Signature block -->
+  <div class="pa-sig">
+    <div class="pa-sig-hdr">ลงนามรับทราบ · Acknowledgement &amp; Approval</div>
+    <div class="pa-sig-grid">
+      <div class="pa-sig-item">
+        <div class="pa-sig-line"></div>
+        <div class="pa-sig-lbl">นักบิน / Pilot Assessor</div>
+        <div class="pa-sig-name" id="pa-sig-name-el"></div>
+      </div>
+      <div class="pa-sig-item">
+        <div class="pa-sig-line"></div>
+        <div class="pa-sig-lbl">วันที่ / Date &amp; เวลา / Time</div>
+      </div>
+      <div class="pa-sig-item">
+        <div class="pa-sig-line"></div>
+        <div class="pa-sig-lbl">หัวหน้านักบิน / Flight Supervisor</div>
+      </div>
+      <div class="pa-sig-item">
+        <div class="pa-sig-line"></div>
+        <div class="pa-sig-lbl">วันที่ / Date &amp; เวลา / Time</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑦ Footer -->
+  <div class="pa-footer">
+    <span>FLIGHT RISK ASSESSMENT FORM · แบบประเมินความเสี่ยงก่อนทำการบิน</span>
+    <span>สำหรับการบรีฟก่อนบิน / PRE-FLIGHT BRIEFING USE ONLY — CONFIDENTIAL</span>
+  </div>
+
+</div>
+
+</body>
+</html>
