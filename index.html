@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 * { font-family:'Sarabun',sans-serif; box-sizing:border-box; }
-body { background:#f5f5f4; color:#1c1917; }
+body { background:#f5f5f4; color:#1c1917; overflow-x:hidden; -webkit-text-size-adjust:100%; }
 
 /* tabs */
 .tab-btn { padding:10px 22px; font-size:14px; font-weight:500; border-bottom:2px solid transparent; color:#78716c; background:transparent; cursor:pointer; transition:.15s; }
@@ -20,28 +20,31 @@ body { background:#f5f5f4; color:#1c1917; }
 /* card */
 .card { background:#fff; border-radius:10px; border:1px solid #e7e5e4; }
 
-/* inputs */
-.inp { border:1.5px solid #e7e5e4; border-radius:7px; padding:7px 10px; font-size:13px; width:100%; background:#fafaf9; transition:border .15s; }
+/* inputs — font-size 16px prevents iOS auto-zoom on focus */
+.inp { border:1.5px solid #e7e5e4; border-radius:7px; padding:9px 12px; font-size:16px; width:100%; background:#fafaf9; transition:border .15s; }
 .inp:focus { outline:none; border-color:#a8a29e; background:#fff; }
 
 /* role buttons */
 .role-btn {
   padding:16px 20px; border-radius:10px; border:2px solid #e7e5e4;
   background:#fff; cursor:pointer; transition:.15s; text-align:left; width:100%;
+  min-height:64px;
 }
 .role-btn:hover { border-color:#a8a29e; }
 .role-btn.active { border-color:#1c1917; background:#fafaf9; }
-.role-btn .role-title { font-size:15px; font-weight:600; color:#1c1917; }
-.role-btn .role-sub   { font-size:12px; color:#78716c; margin-top:3px; }
+.role-btn .role-title { font-size:16px; font-weight:600; color:#1c1917; }
+.role-btn .role-sub   { font-size:13px; color:#78716c; margin-top:3px; }
 
 /* options */
 .opt {
-  display:flex; align-items:flex-start; gap:10px;
-  padding:10px 12px; border-radius:7px; border:1.5px solid #e7e5e4;
-  cursor:pointer; transition:.12s; margin-bottom:5px; background:#fff;
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 14px; border-radius:7px; border:1.5px solid #e7e5e4;
+  cursor:pointer; transition:.12s; margin-bottom:6px; background:#fff;
+  min-height:48px; /* touch target */
+  -webkit-tap-highlight-color: transparent;
 }
 .opt:hover { border-color:#a8a29e; background:#fafaf9; }
-.opt-radio { width:16px; height:16px; border-radius:50%; border:1.5px solid #d6d3d1; background:#fff; flex-shrink:0; margin-top:3px; transition:.12s; }
+.opt-radio { width:18px; height:18px; border-radius:50%; border:1.5px solid #d6d3d1; background:#fff; flex-shrink:0; margin-top:2px; transition:.12s; }
 .opt.sel-0 { border-color:#86efac; background:#f0fdf4; }
 .opt.sel-1 { border-color:#fcd34d; background:#fffbeb; }
 .opt.sel-2 { border-color:#fca5a5; background:#fff1f2; }
@@ -51,7 +54,7 @@ body { background:#f5f5f4; color:#1c1917; }
 .opt.sel-0 .opt-text { color:#166534; }
 .opt.sel-1 .opt-text { color:#92400e; }
 .opt.sel-2 .opt-text { color:#9f1239; }
-.opt-text { font-size:13.5px; line-height:1.45; color:#44403c; flex:1; }
+.opt-text { font-size:14.5px; line-height:1.5; color:#44403c; flex:1; }
 
 /* mitigation */
 .mit { display:none; margin-top:6px; font-size:12.5px; padding:6px 10px; border-radius:5px; }
@@ -65,15 +68,25 @@ body { background:#f5f5f4; color:#1c1917; }
 .rl-mid  { background:#fef9c3; color:#a16207; }
 .rl-high { background:#ffe4e6; color:#be123c; }
 
-/* top bar */
-.top-bar { position:sticky; top:0; z-index:50; background:rgba(255,255,255,.95); backdrop-filter:blur(6px); border-bottom:1px solid #e7e5e4; padding:8px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+/* top bar — two-row mobile layout */
+.top-bar {
+  position:sticky; top:0; z-index:50;
+  background:rgba(255,255,255,.95); backdrop-filter:blur(6px);
+  border-bottom:1px solid #e7e5e4;
+  padding:8px 16px 8px;
+  padding-left:  max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+.tb-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.tb-label { font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:.05em; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tb-count { font-size:12px; color:#a8a29e; flex-shrink:0; white-space:nowrap; }
 
 /* progress */
 .prog-bg { height:5px; background:#e7e5e4; border-radius:999px; }
 .prog-fill { height:5px; border-radius:999px; transition:width .3s,background .3s; background:#86efac; }
 
 /* section header */
-.sec-hdr { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; user-select:none; border-bottom:1px solid #e7e5e4; }
+.sec-hdr { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; cursor:pointer; user-select:none; border-bottom:1px solid #e7e5e4; min-height:52px; -webkit-tap-highlight-color:transparent; }
 .chevron { font-size:10px; color:#a8a29e; transition:transform .2s; }
 .collapsed .chevron { transform:rotate(-90deg); }
 .col-body { overflow:hidden; transition:max-height .22s ease; }
@@ -87,16 +100,41 @@ body { background:#f5f5f4; color:#1c1917; }
 .sec-bar-bg { height:6px; border-radius:999px; background:#f5f5f4; }
 .sec-bar-fill { height:6px; border-radius:999px; transition:width .4s,background .4s; }
 
-/* buttons */
-.btn-primary { padding:10px 24px; border-radius:8px; font-size:14px; font-weight:600; background:#1c1917; color:#fff; cursor:pointer; border:none; transition:.15s; }
+/* buttons — min-height 44px for iOS touch target */
+.btn-primary { padding:11px 24px; border-radius:8px; font-size:15px; font-weight:600; background:#1c1917; color:#fff; cursor:pointer; border:none; transition:.15s; min-height:44px; -webkit-tap-highlight-color:transparent; }
 .btn-primary:hover { background:#292524; }
 .btn-primary:disabled { background:#d6d3d1; color:#a8a29e; cursor:not-allowed; }
-.btn-ghost { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:500; border:1.5px solid #e7e5e4; background:#fff; color:#44403c; cursor:pointer; transition:.15s; }
+.btn-ghost { padding:9px 16px; border-radius:8px; font-size:13px; font-weight:500; border:1.5px solid #e7e5e4; background:#fff; color:#44403c; cursor:pointer; transition:.15s; min-height:40px; -webkit-tap-highlight-color:transparent; }
 .btn-ghost:hover { border-color:#a8a29e; background:#fafaf9; }
-.btn-danger { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:500; border:1.5px solid #fca5a5; background:#fff1f2; color:#b91c1c; cursor:pointer; transition:.15s; }
+.btn-danger { padding:9px 16px; border-radius:8px; font-size:13px; font-weight:500; border:1.5px solid #fca5a5; background:#fff1f2; color:#b91c1c; cursor:pointer; transition:.15s; min-height:40px; }
 
 /* high risk item */
 .risk-item { border-left:3px solid #fca5a5; background:#fff1f2; padding:8px 12px; border-radius:0 6px 6px 0; font-size:13px; }
+
+/* ── safe area (iPhone notch / home indicator) ── */
+.safe-x { padding-left:max(16px,env(safe-area-inset-left)); padding-right:max(16px,env(safe-area-inset-right)); }
+.safe-b { padding-bottom:max(16px,env(safe-area-inset-bottom)); }
+
+/* ── responsive ── */
+@media (max-width:640px) {
+  /* setup: single-col flight info on very small phones */
+  .flight-grid { grid-template-columns:1fr !important; }
+  /* assessment confirm bar */
+  .confirm-bar { flex-direction:column; align-items:stretch !important; }
+  .confirm-bar .btn-primary { width:100%; justify-content:center; }
+  /* report: info grid 1-col on xs */
+  .r-info-grid { grid-template-columns:1fr 1fr !important; }
+  /* radar min-height on mobile */
+  .radar-wrap { min-height:220px !important; }
+  /* factor wrap padding smaller */
+  .factor-wrap { padding:12px 14px; }
+  /* risk-badge font */
+  #r-risk-badge { font-size:18px !important; padding:6px 20px !important; }
+}
+@media (min-width:641px) and (max-width:1023px) {
+  /* tablet: wider setup form */
+  #s1 .max-w-lg { max-width:600px; }
+}
 
 /* ── print helpers ── */
 .no-screen { display:none !important; }
@@ -329,7 +367,7 @@ body { background:#f5f5f4; color:#1c1917; }
     <!-- Flight info -->
     <div class="card p-4">
       <p class="text-xs font-semibold uppercase tracking-widest text-stone-400 mb-3">ข้อมูลเที่ยวบิน</p>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="flight-grid grid grid-cols-2 gap-3">
         <div><label class="text-xs text-stone-400 block mb-1">วันที่</label><input type="date" id="setup-date" class="inp"></div>
         <div><label class="text-xs text-stone-400 block mb-1" id="setup-no-lbl">Flight No.</label><input type="text" id="setup-no" placeholder="TH-001" class="inp"></div>
         <div><label class="text-xs text-stone-400 block mb-1">Aircraft Type</label><input type="text" id="setup-ac" placeholder="UH-60" class="inp"></div>
@@ -372,22 +410,20 @@ body { background:#f5f5f4; color:#1c1917; }
 <div id="s2" hidden>
 
   <div class="top-bar no-print">
-    <div class="flex items-center gap-3">
-      <button class="btn-ghost text-xs" onclick="goSetup()">← กลับ</button>
-      <span id="a2-label" class="text-xs font-semibold text-stone-500 uppercase tracking-wide"></span>
-      <span id="a2-risk" class="risk-badge rl-low">GO</span>
+    <div class="tb-row">
+      <button class="btn-ghost" style="font-size:13px;padding:6px 12px;min-height:36px;flex-shrink:0" onclick="goSetup()">← กลับ</button>
+      <span id="a2-label" class="tb-label"></span>
+      <span id="a2-risk" class="risk-badge rl-low" style="flex-shrink:0">GO</span>
+      <span class="tb-count"><span id="a2-answered">0</span>/<span id="a2-total">0</span></span>
     </div>
-    <div class="flex items-center gap-3">
-      <span class="text-xs text-stone-400"><span id="a2-answered">0</span>/<span id="a2-total">0</span></span>
-      <div style="width:120px"><div class="prog-bg"><div id="a2-prog" class="prog-fill" style="width:0%"></div></div></div>
-    </div>
+    <div class="prog-bg"><div id="a2-prog" class="prog-fill" style="width:0%"></div></div>
   </div>
 
   <div class="max-w-3xl mx-auto px-4 py-5 space-y-4">
     <div id="a2-sections"></div>
 
     <div class="card p-5 no-print">
-      <div class="flex items-center justify-between flex-wrap gap-3">
+      <div class="confirm-bar flex items-center justify-between flex-wrap gap-3">
         <div class="text-sm text-stone-500">ตรวจสอบคำตอบให้ครบก่อนยืนยัน</div>
         <button class="btn-primary px-8" onclick="confirmAssessment()">ยืนยันการประเมิน ✓</button>
       </div>
@@ -414,7 +450,7 @@ body { background:#f5f5f4; color:#1c1917; }
 
     <!-- Report header -->
     <div class="card p-5">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+      <div class="r-info-grid grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
         <div><span class="text-xs text-stone-400 block">ผู้ประเมิน</span><span id="r-name" class="font-semibold"></span></div>
         <div><span class="text-xs text-stone-400 block">หน้าที่</span><span id="r-role" class="font-semibold"></span></div>
         <div><span class="text-xs text-stone-400 block">ประเภทแบบฟอร์ม</span><span id="r-type" class="font-semibold"></span></div>
