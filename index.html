@@ -815,9 +815,10 @@ function confirmAssessment() {
   const sections = getActiveSections();
   const totalQ = sections.flatMap(s=>s.factors).length;
   const ans = answeredCount();
-  if (ans < totalQ && !confirmOnce) {
-    confirmOnce = true;
+  if (ans < totalQ) {
     document.getElementById('a2-warn').classList.remove('hidden');
+    document.getElementById('a2-warn').textContent =
+      `⚠️ ยังตอบไม่ครบ — ตอบแล้ว ${ans} จาก ${totalQ} ข้อ กรุณาตอบให้ครบก่อนยืนยัน`;
     return;
   }
   document.getElementById('a2-warn').classList.add('hidden');
